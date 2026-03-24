@@ -1,6 +1,6 @@
 {
   "name": "@stenvault/pqc-wasm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ML-KEM-768 + ML-DSA-65 WASM wrapper — RustCrypto compiled to WebAssembly",
   "license": "MIT",
   "repository": {
@@ -35,7 +35,8 @@
   "scripts": {
     "build:bundler": "wasm-pack build --target bundler --release --out-dir pkg-bundler",
     "build:nodejs": "wasm-pack build --target nodejs --release --out-dir pkg-nodejs",
-    "build:wasm": "npm run build:bundler && npm run build:nodejs",
+    "build:wasm": "npm run build:bundler && npm run build:nodejs && npm run postbuild:wasm",
+    "postbuild:wasm": "rm -f pkg-bundler/.gitignore pkg-nodejs/.gitignore",
     "build:ts": "tsc",
     "build": "npm run build:wasm && npm run build:ts",
     "test": "npx tsx tests/interop.ts"

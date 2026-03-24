@@ -1,0 +1,48 @@
+{
+  "name": "@stenvault/pqc-wasm",
+  "version": "0.1.0",
+  "description": "ML-KEM-768 + ML-DSA-65 WASM wrapper — RustCrypto compiled to WebAssembly",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gefson-costa/pqc-wasm"
+  },
+  "type": "module",
+  "main": "./src/index.node.js",
+  "types": "./src/types.d.ts",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./src/index.browser.d.ts",
+        "default": "./src/index.browser.js"
+      },
+      "node": {
+        "types": "./src/index.node.d.ts",
+        "default": "./src/index.node.js"
+      },
+      "default": {
+        "types": "./src/index.node.d.ts",
+        "default": "./src/index.node.js"
+      }
+    }
+  },
+  "files": [
+    "src/*.js",
+    "src/*.d.ts",
+    "pkg-bundler/",
+    "pkg-nodejs/"
+  ],
+  "scripts": {
+    "build:bundler": "wasm-pack build --target bundler --release --out-dir pkg-bundler",
+    "build:nodejs": "wasm-pack build --target nodejs --release --out-dir pkg-nodejs",
+    "build:wasm": "npm run build:bundler && npm run build:nodejs",
+    "build:ts": "tsc",
+    "build": "npm run build:wasm && npm run build:ts",
+    "test": "npx tsx tests/interop.ts"
+  },
+  "devDependencies": {
+    "@openforge-sh/liboqs": "^0.14.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  }
+}

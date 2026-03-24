@@ -1,0 +1,46 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # Security audit FIRST — fail fast on known advisories
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+      - name: Audit dependencies
+        run: cargo audit
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build (bundler target)
+        run: wasm-pack build --target bundler --release --out-dir pkg-bundler
+
+      - name: Build (nodejs target)
+        run: wasm-pack build --target nodejs --release --out-dir pkg-nodejs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install TypeScript
+        run: npm install typescript
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: WASM size report
+        run: |
+          echo "pkg-bundler:"
+          ls -lh pkg-bundler/*.wasm
+          echo "pkg-nodejs:"
+          ls -lh pkg-nodejs/*.wasm

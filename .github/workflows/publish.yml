@@ -1,0 +1,50 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for npm provenance (SLSA)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+      - name: Audit dependencies
+        run: cargo audit
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build (bundler target)
+        run: wasm-pack build --target bundler --release --out-dir pkg-bundler
+
+      - name: Build (nodejs target)
+        run: wasm-pack build --target nodejs --release --out-dir pkg-nodejs
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install TypeScript
+        run: npm install typescript
+
+      - name: Build TypeScript
+        run: npx tsc
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

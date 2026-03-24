@@ -32,15 +32,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install TypeScript
-        run: npm install typescript
+      - name: Install dependencies
+        run: npm install
 
-      - name: Typecheck
-        run: npx tsc --noEmit
+      - name: Build TypeScript
+        run: npx tsc
 
-      - name: WASM size report
+      - name: Run interop tests
+        run: npm test
+
+      - name: WASM size check
         run: |
-          echo "pkg-bundler:"
-          ls -lh pkg-bundler/*.wasm
-          echo "pkg-nodejs:"
-          ls -lh pkg-nodejs/*.wasm
+          BUNDLER_SIZE=$(stat -c%s pkg-bundler/stenvault_pqc_bg.wasm)
+          NODEJS_SIZE=$(stat -c%s pkg-nodejs/stenvault_pqc_bg.wasm)
+          echo "pkg-bundler: $(numfmt --to=iec $BUNDLER_SIZE)"
+          echo "pkg-nodejs:  $(numfmt --to=iec $NODEJS_SIZE)"
+          # Fail if WASM exceeds 500KB (unexpected bloat)
+          if [ "$BUNDLER_SIZE" -gt 512000 ]; then
+            echo "::error::pkg-bundler WASM exceeds 500KB ($BUNDLER_SIZE bytes)"
+            exit 1
+          fi

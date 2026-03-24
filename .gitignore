@@ -11,3 +11,4 @@ node_modules/
 !src/index.browser.ts
 !src/index.node.ts
 !tests/interop.ts
+MAINTENANCE.md

@@ -1,0 +1,40 @@
+version: 2
+
+updates:
+  # Rust crates (ml-kem, ml-dsa, zeroize, wasm-bindgen, etc.)
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - rust
+    commit-message:
+      prefix: "deps(rust):"
+
+  # npm dependencies (devDeps like tsx, typescript)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - npm
+    commit-message:
+      prefix: "deps(npm):"
+
+  # GitHub Actions (actions/checkout, dtolnay/rust-toolchain, etc.)
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "ci:"

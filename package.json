@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Gefson-costa/pqc-wasm"
+    "url": "https://github.com/StenVault/pqc-wasm"
   },
   "type": "module",
   "main": "./src/index.node.js",

@@ -53,7 +53,12 @@ export function encapsulateCore(publicKey: Uint8Array): EncapsulateResult {
 export function decapsulateCore(ciphertext: Uint8Array, secretKey: Uint8Array): Uint8Array {
   const w = getWasm()
   // Rust API: (dk, ct) — we receive (ct, sk) from StenVault convention
-  return new Uint8Array(w.ml_kem_768_decapsulate(secretKey, ciphertext))
+  const result = w.ml_kem_768_decapsulate(secretKey, ciphertext)
+  try {
+    return new Uint8Array(result.shared_secret)
+  } finally {
+    result.free()
+  }
 }
 
 // ── ML-DSA-65 ───────────────────────────────────────────────────────────────

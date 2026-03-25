@@ -84,7 +84,22 @@ pub fn ml_kem_768_encapsulate(ek_bytes: &[u8]) -> Result<MlKem768EncapResult, Js
 }
 
 #[wasm_bindgen]
-pub fn ml_kem_768_decapsulate(dk_bytes: &[u8], ct_bytes: &[u8]) -> Result<Vec<u8>, JsError> {
+#[derive(Zeroize, ZeroizeOnDrop)]
+pub struct MlKem768DecapResult {
+    #[zeroize]
+    shared_secret: Vec<u8>,
+}
+
+#[wasm_bindgen]
+impl MlKem768DecapResult {
+    #[wasm_bindgen(getter)]
+    pub fn shared_secret(&self) -> Vec<u8> {
+        self.shared_secret.clone()
+    }
+}
+
+#[wasm_bindgen]
+pub fn ml_kem_768_decapsulate(dk_bytes: &[u8], ct_bytes: &[u8]) -> Result<MlKem768DecapResult, JsError> {
     use ml_kem::kem::Decapsulate;
     use ml_kem::{EncodedSizeUser, KemCore, MlKem768};
 
@@ -107,7 +122,9 @@ pub fn ml_kem_768_decapsulate(dk_bytes: &[u8], ct_bytes: &[u8]) -> Result<Vec<u8
         .decapsulate(&ct)
         .map_err(|_| JsError::new("decapsulation failed"))?;
 
-    Ok(ss[..].to_vec())
+    Ok(MlKem768DecapResult {
+        shared_secret: ss[..].to_vec(),
+    })
 }
 
 // ── ML-DSA-65 (FIPS 204) ───────────────────────────────────────────────────
@@ -146,6 +163,9 @@ pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
     let kp = MlDsa65::from_seed(&seed);
 
     // Return FIPS-standard full key sizes (not 32-byte seed)
+    // TODO(ml-dsa-stable): to_expanded() is deprecated in favor of KeyPair::to_seed().
+    // Migration to seed-based keys (32 bytes) would be a breaking change (4032 → 32 byte signing key).
+    // Track: https://github.com/RustCrypto/signatures/tree/master/ml-dsa
     #[allow(deprecated)]
     let sk_expanded = kp.signing_key().to_expanded();
 
@@ -167,6 +187,7 @@ pub fn ml_dsa_65_sign(sk_bytes: &[u8], message: &[u8]) -> Result<Vec<u8>, JsErro
     let sk_enc = ExpandedSigningKey::<MlDsa65>::try_from(sk_bytes)
         .map_err(|_| JsError::new("invalid signing key encoding"))?;
 
+    // TODO(ml-dsa-stable): from_expanded() is deprecated in favor of SigningKey::from_seed().
     #[allow(deprecated)]
     let sk = SigningKey::<MlDsa65>::from_expanded(&sk_enc);
 

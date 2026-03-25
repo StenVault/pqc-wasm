@@ -82,8 +82,9 @@ The consumer never calls `free()`, never calls `init()`, and never imports from 
 
 - **Constant-time**: `subtle` crate in Rust, preserved through WASM compilation
 - **Memory zeroing**: `zeroize` crate with `#[derive(ZeroizeOnDrop)]` on all secret-holding structs
-- **No audit**: Neither RustCrypto nor this wrapper have been independently audited. RustCrypto is honest about this. See `PLAN_stenvault_pqc_wasm.md` section 10 for full risk analysis.
-- **CVE-2026-22705**: Timing side-channel in `ml-dsa` Decompose function, patched in `>= 0.1.0-rc.3` (Barrett reduction). Cargo.toml pins `>= 0.1.0-rc.3, < 0.2`.
+- **No audit**: Neither RustCrypto nor this wrapper have been independently audited. RustCrypto is honest about this.
+- **CVE-2026-22705**: Timing side-channel in `ml-dsa` Decompose function, patched in `>= 0.1.0-rc.3` (Barrett reduction).
+- **CVE-2026-24850**: Signature malleability via duplicate hint indices in `ml-dsa`, patched in `>= 0.1.0-rc.4`. Cargo.toml pins `>= 0.1.0-rc.4, < 0.2`.
 - **Supply chain**: `Cargo.lock` committed, CI runs `cargo audit` before every build.
 
 ## License

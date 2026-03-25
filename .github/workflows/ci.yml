@@ -52,3 +52,7 @@ jobs:
             echo "::error::pkg-bundler WASM exceeds 500KB ($BUNDLER_SIZE bytes)"
             exit 1
           fi
+          if [ "$NODEJS_SIZE" -gt 512000 ]; then
+            echo "::error::pkg-nodejs WASM exceeds 500KB ($NODEJS_SIZE bytes)"
+            exit 1
+          fi

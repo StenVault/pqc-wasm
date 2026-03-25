@@ -141,6 +141,7 @@ pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
     let mut seed_bytes = [0u8; 32];
     getrandom::getrandom(&mut seed_bytes).expect("getrandom failed");
     let seed = ml_dsa::B32::from(seed_bytes);
+    seed_bytes.zeroize();
 
     let kp = MlDsa65::from_seed(&seed);
 
@@ -183,6 +184,9 @@ pub fn ml_dsa_65_verify(vk_bytes: &[u8], message: &[u8], signature: &[u8]) -> Re
 
     if vk_bytes.len() != 1952 {
         return Err(JsError::new("invalid verifying key length: expected 1952 bytes"));
+    }
+    if signature.len() != 3309 {
+        return Err(JsError::new("invalid signature length: expected 3309 bytes"));
     }
 
     let vk_enc = EncodedVerifyingKey::<MlDsa65>::try_from(vk_bytes)

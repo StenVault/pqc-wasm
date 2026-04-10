@@ -152,46 +152,48 @@ impl MlDsa65KeyPair {
 
 #[wasm_bindgen]
 pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
-    use ml_dsa::{KeyGen, MlDsa65};
+    use ml_dsa::{B32, KeyGen, MlDsa65};
+    use ml_dsa::signature::Keypair;
 
     // Generate random seed using getrandom (js feature = crypto.getRandomValues)
     let mut seed_bytes = [0u8; 32];
     getrandom::getrandom(&mut seed_bytes).expect("getrandom failed");
-    let seed = ml_dsa::B32::from(seed_bytes);
+    let mut seed = B32::from(seed_bytes);
     seed_bytes.zeroize();
 
-    let kp = MlDsa65::from_seed(&seed);
+    // Deterministic keypair from seed (FIPS 204 canonical).
+    let kp = <MlDsa65 as KeyGen>::from_seed(&seed);
+    let vk = kp.verifying_key();
 
-    // Return FIPS-standard full key sizes (not 32-byte seed)
-    // TODO(ml-dsa-stable): to_expanded() is deprecated in favor of KeyPair::to_seed().
-    // Migration to seed-based keys (32 bytes) would be a breaking change (4032 → 32 byte signing key).
-    // Track: https://github.com/RustCrypto/signatures/tree/master/ml-dsa
-    #[allow(deprecated)]
-    let sk_expanded = kp.signing_key().to_expanded();
+    // Store only the 32-byte seed (FIPS 204 canonical form); signing re-expands via from_seed.
+    let secret_key: Vec<u8> = seed.as_slice().to_vec();
+    let public_key: Vec<u8> = vk.encode().to_vec();
+    seed.zeroize();
 
     MlDsa65KeyPair {
-        verifying_key: kp.verifying_key().encode()[..].to_vec(),
-        signing_key: sk_expanded[..].to_vec(),
+        verifying_key: public_key,
+        signing_key: secret_key,
     }
 }
 
 #[wasm_bindgen]
 pub fn ml_dsa_65_sign(sk_bytes: &[u8], message: &[u8]) -> Result<Vec<u8>, JsError> {
-    use ml_dsa::{MlDsa65, SigningKey, ExpandedSigningKey};
+    use ml_dsa::{B32, ExpandedSigningKey, MlDsa65};
     use ml_dsa::signature::Signer;
 
-    if sk_bytes.len() != 4032 {
-        return Err(JsError::new("invalid signing key length: expected 4032 bytes"));
+    if sk_bytes.len() != 32 {
+        return Err(JsError::new("invalid signing key length: expected 32 bytes"));
     }
 
-    let sk_enc = ExpandedSigningKey::<MlDsa65>::try_from(sk_bytes)
-        .map_err(|_| JsError::new("invalid signing key encoding"))?;
+    let seed_arr: [u8; 32] = sk_bytes
+        .try_into()
+        .map_err(|_| JsError::new("invalid signing key seed encoding"))?;
+    let seed = B32::from(seed_arr);
 
-    // TODO(ml-dsa-stable): from_expanded() is deprecated in favor of SigningKey::from_seed().
-    #[allow(deprecated)]
-    let sk = SigningKey::<MlDsa65>::from_expanded(&sk_enc);
+    // NOTE: from_seed lives on ExpandedSigningKey in rc.8 (NOT on the SigningKey wrapper).
+    // SigningKey only exposes to_seed(); the expansion path stayed on ExpandedSigningKey.
+    let sk = ExpandedSigningKey::<MlDsa65>::from_seed(&seed);
 
-    // Deterministic signing (FIPS 204 optional deterministic variant)
     let sig = sk.try_sign(message)
         .map_err(|e| JsError::new(&format!("signing failed: {}", e)))?;
 

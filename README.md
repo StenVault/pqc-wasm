@@ -45,7 +45,7 @@ const decrypted = await decapsulate(ciphertext, kp.secretKey)
 // ML-DSA-65
 const sigKp = await generateSignatureKeyPair()
 // sigKp.publicKey: Uint8Array (1,952 bytes)
-// sigKp.secretKey: Uint8Array (4,032 bytes)
+// sigKp.secretKey: Uint8Array (32 bytes, FIPS 204 seed)
 
 const signature = await sign(message, sigKp.secretKey)
 // signature: Uint8Array (3,309 bytes)
@@ -76,7 +76,7 @@ The consumer never calls `free()`, never calls `init()`, and never imports from 
 | Algorithm | Public Key | Secret Key | Ciphertext | Signature | Shared Secret |
 |-----------|-----------|-----------|-----------|----------|--------------|
 | ML-KEM-768 | 1,184 B | 2,400 B | 1,088 B | — | 32 B |
-| ML-DSA-65 | 1,952 B | 4,032 B | — | 3,309 B | — |
+| ML-DSA-65 | 1,952 B | 32 B (seed) | — | 3,309 B | — |
 
 ## Security
 
@@ -84,7 +84,7 @@ The consumer never calls `free()`, never calls `init()`, and never imports from 
 - **Memory zeroing**: `zeroize` crate with `#[derive(ZeroizeOnDrop)]` on all secret-holding structs
 - **No audit**: Neither RustCrypto nor this wrapper have been independently audited. RustCrypto is honest about this.
 - **CVE-2026-22705**: Timing side-channel in `ml-dsa` Decompose function, patched in `>= 0.1.0-rc.3` (Barrett reduction).
-- **CVE-2026-24850**: Signature malleability via duplicate hint indices in `ml-dsa`, patched in `>= 0.1.0-rc.4`. Cargo.toml pins `>= 0.1.0-rc.4, < 0.2`.
+- **CVE-2026-24850**: Signature malleability via duplicate hint indices in `ml-dsa`, patched in `>= 0.1.0-rc.4`. Cargo.toml pins `= 0.1.0-rc.8` (FIPS 204 seed API + WASM stack-overflow fix via PRs #1259 + #1261).
 - **Supply chain**: `Cargo.lock` committed, CI runs `cargo audit` before every build.
 
 ## License

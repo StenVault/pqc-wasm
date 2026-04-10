@@ -12,3 +12,4 @@ node_modules/
 !src/index.node.ts
 !tests/interop.ts
 MAINTENANCE.md
+libsdecision.md

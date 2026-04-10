@@ -1,6 +1,6 @@
 {
   "name": "@stenvault/pqc-wasm",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "ML-KEM-768 + ML-DSA-65 WASM wrapper — RustCrypto compiled to WebAssembly",
   "license": "MIT",
   "repository": {

@@ -1,6 +1,6 @@
 [package]
 name = "stenvault-pqc"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "ML-KEM-768 + ML-DSA-65 WASM wrapper for StenVault"
 license = "MIT"
@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "0.2"
 ml-kem = { version = "0.2", features = ["zeroize"] }
-ml-dsa = { version = ">=0.1.0-rc.4, <0.2", features = ["zeroize"] }  # CVE-2026-22705 (rc.3), CVE-2026-24850 (rc.4)
+ml-dsa = { version = "=0.1.0-rc.8", features = ["zeroize"] }  # FIPS 204 seed API + WASM stack-overflow fix
 zeroize = { version = "1.8", features = ["derive"] }
 getrandom = { version = "0.2", features = ["js"] }
 rand_core = { version = "0.6", features = ["getrandom"] }

@@ -54,7 +54,7 @@ async function testKemSelfRoundtrip(): Promise<void> {
 async function testDsaSelfRoundtrip(): Promise<void> {
   const kp = await generateSignatureKeyPair()
   assert(kp.publicKey.length === 1952, 'ML-DSA-65 public key is 1952 bytes')
-  assert(kp.secretKey.length === 4032, 'ML-DSA-65 secret key is 4032 bytes')
+  assert(kp.secretKey.length === 32, 'ML-DSA-65 secret key seed is 32 bytes (FIPS 204 canonical)')
 
   const message = new TextEncoder().encode('StenVault interop test message')
   const signature = await sign(message, kp.secretKey)

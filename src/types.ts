@@ -15,7 +15,7 @@ export interface EncapsulateResult {
 
 export interface SignatureKeyPair {
   publicKey: Uint8Array   // verifying key, 1,952 bytes
-  secretKey: Uint8Array   // signing key, 4,032 bytes
+  secretKey: Uint8Array   // signing key seed (FIPS 204 canonical), 32 bytes
 }
 
 export interface PqcApi {

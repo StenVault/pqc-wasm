@@ -155,24 +155,20 @@ pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
     use ml_dsa::{B32, KeyGen, MlDsa65};
     use ml_dsa::signature::Keypair;
 
-    // Generate random seed using getrandom (js feature = crypto.getRandomValues)
+    // getrandom with the `js` feature routes to crypto.getRandomValues under wasm32
     let mut seed_bytes = [0u8; 32];
     getrandom::getrandom(&mut seed_bytes).expect("getrandom failed");
     let mut seed = B32::from(seed_bytes);
     seed_bytes.zeroize();
 
-    // Deterministic keypair from seed (FIPS 204 canonical).
     let kp = <MlDsa65 as KeyGen>::from_seed(&seed);
-    let vk = kp.verifying_key();
-
-    // Store only the 32-byte seed (FIPS 204 canonical form); signing re-expands via from_seed.
-    let secret_key: Vec<u8> = seed.as_slice().to_vec();
-    let public_key: Vec<u8> = vk.encode().to_vec();
+    let verifying_key = kp.verifying_key().encode()[..].to_vec();
+    let signing_key = seed.as_slice().to_vec();
     seed.zeroize();
 
     MlDsa65KeyPair {
-        verifying_key: public_key,
-        signing_key: secret_key,
+        verifying_key,
+        signing_key,
     }
 }
 
@@ -190,10 +186,7 @@ pub fn ml_dsa_65_sign(sk_bytes: &[u8], message: &[u8]) -> Result<Vec<u8>, JsErro
         .map_err(|_| JsError::new("invalid signing key seed encoding"))?;
     let seed = B32::from(seed_arr);
 
-    // NOTE: from_seed lives on ExpandedSigningKey in rc.8 (NOT on the SigningKey wrapper).
-    // SigningKey only exposes to_seed(); the expansion path stayed on ExpandedSigningKey.
     let sk = ExpandedSigningKey::<MlDsa65>::from_seed(&seed);
-
     let sig = sk.try_sign(message)
         .map_err(|e| JsError::new(&format!("signing failed: {}", e)))?;
 

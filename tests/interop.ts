@@ -69,6 +69,54 @@ async function testDsaSelfRoundtrip(): Promise<void> {
   assert(!invalid, 'DSA self-roundtrip: tampered message rejects')
 }
 
+// ── Input validation tests ─────────────────────────────────────────────────
+// These guard the length checks added in src/lib.rs so they don't regress
+// silently. Every wasm-exported entry point that takes a byte slice rejects
+// wrong-sized input with a JsError — we assert the Promise rejects.
+
+async function expectReject(label: string, fn: () => Promise<unknown>): Promise<void> {
+  try {
+    await fn()
+  } catch {
+    console.log(`PASS: ${label}`)
+    return
+  }
+  console.error(`FAIL: ${label} — expected rejection, got success`)
+  process.exit(1)
+}
+
+async function testInputValidation(): Promise<void> {
+  const kemKp = await generateKemKeyPair()
+  const sigKp = await generateSignatureKeyPair()
+  const msg = new TextEncoder().encode('validation probe')
+  const goodSig = await sign(msg, sigKp.secretKey)
+
+  await expectReject(
+    'encapsulate rejects wrong-size public key',
+    () => encapsulate(new Uint8Array(1183)),
+  )
+  await expectReject(
+    'decapsulate rejects wrong-size secret key',
+    () => decapsulate(new Uint8Array(1088), new Uint8Array(2399)),
+  )
+  await expectReject(
+    'decapsulate rejects wrong-size ciphertext',
+    () => decapsulate(new Uint8Array(1087), kemKp.secretKey),
+  )
+  await expectReject(
+    'sign rejects wrong-size signing key seed',
+    () => sign(msg, new Uint8Array(31)),
+  )
+  await expectReject(
+    'verify rejects wrong-size verifying key',
+    () => verify(msg, goodSig, new Uint8Array(1951)),
+  )
+  await expectReject(
+    'verify rejects wrong-size signature',
+    () => verify(msg, new Uint8Array(3308), sigKp.publicKey),
+  )
+}
+
 // ── Cross-library interop tests (requires @openforge-sh/liboqs) ────────────
 // These tests cover the 4 mandatory directions from the plan:
 //
@@ -170,6 +218,9 @@ async function main(): Promise<void> {
 
   console.log('\n--- ML-DSA-65 self-roundtrip ---')
   await testDsaSelfRoundtrip()
+
+  console.log('\n--- Input validation (negative tests) ---')
+  await testInputValidation()
 
   console.log('\n--- ML-KEM-768 cross-library ---')
   await testCrossLibraryKem()

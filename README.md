@@ -84,7 +84,9 @@ The consumer never calls `free()`, never calls `init()`, and never imports from 
 - **Memory zeroing**: `zeroize` crate with `#[derive(ZeroizeOnDrop)]` on all secret-holding structs
 - **No audit**: Neither RustCrypto nor this wrapper have been independently audited. RustCrypto is honest about this.
 - **CVE-2026-22705**: Timing side-channel in `ml-dsa` Decompose function, patched in `>= 0.1.0-rc.3` (Barrett reduction).
-- **CVE-2026-24850**: Signature malleability via duplicate hint indices in `ml-dsa`, patched in `>= 0.1.0-rc.4`. Cargo.toml pins `= 0.1.0-rc.8` (FIPS 204 seed API + WASM stack-overflow fix via PRs #1259 + #1261).
+- **CVE-2026-24850**: Signature malleability via duplicate hint indices in `ml-dsa`, patched in `>= 0.1.0-rc.4`.
+- **GHSA-h37v-hp6w-2pp8**: Off-by-two in `ml-dsa` `use_hint` when `r0 = 0` (FIPS 204 Alg. 40 deviation), patched in `>= 0.1.0-rc.5`.
+- Cargo.toml pins `= 0.1.0-rc.8` (FIPS 204 seed API + WASM stack-overflow fix via PRs #1259 + #1261).
 - **Supply chain**: `Cargo.lock` committed, CI runs `cargo audit` before every build.
 
 ## License

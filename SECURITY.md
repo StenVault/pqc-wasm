@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | Yes       |
+| 0.2.x   | Yes       |
+| 0.1.x   | No        |
 
 ## Reporting a Vulnerability
 
@@ -34,7 +35,8 @@ We aim to acknowledge reports within **48 hours** and provide a fix or mitigatio
 
 ## Past Vulnerabilities
 
-| CVE | Severity | Description | Fixed In |
-|-----|----------|-------------|----------|
+| ID | Severity | Description | Fixed In |
+|----|----------|-------------|----------|
+| GHSA-h37v-hp6w-2pp8 | Moderate | Off-by-two in `ml-dsa` `use_hint` when `r0 = 0` (valid signatures fail verify in edge case; FIPS 204 Alg. 40 deviation) | `ml-dsa >= 0.1.0-rc.5` |
 | CVE-2026-24850 | Medium | Signature malleability via duplicate hint indices in `ml-dsa` | `ml-dsa >= 0.1.0-rc.4` |
 | CVE-2026-22705 | High | Timing side-channel in `ml-dsa` Decompose function | `ml-dsa >= 0.1.0-rc.3` |

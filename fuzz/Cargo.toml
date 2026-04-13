@@ -1,0 +1,56 @@
+[package]
+name = "stenvault-pqc-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+# Depend on the same crypto crates and versions as the parent crate.
+# We cannot depend on stenvault-pqc itself because it is a cdylib with
+# wasm-bindgen types.  The fuzz targets exercise the underlying RustCrypto
+# operations with the exact same logic as src/lib.rs.
+[dependencies]
+libfuzzer-sys = "0.4"
+ml-kem = { version = "0.2", features = ["zeroize"] }
+ml-dsa = { version = "=0.1.0-rc.8", features = ["zeroize"] }
+rand_core = "0.6"
+
+[[bin]]
+name = "fuzz_mlkem768_keygen"
+path = "fuzz_targets/fuzz_mlkem768_keygen.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_mlkem768_encapsulate"
+path = "fuzz_targets/fuzz_mlkem768_encapsulate.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_mlkem768_decapsulate"
+path = "fuzz_targets/fuzz_mlkem768_decapsulate.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_mldsa65_sign"
+path = "fuzz_targets/fuzz_mldsa65_sign.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_mldsa65_verify"
+path = "fuzz_targets/fuzz_mldsa65_verify.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]

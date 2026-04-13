@@ -1,0 +1,18 @@
+[package]
+name = "stenvault-pqc-proofs"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-kani = true
+
+[dependencies]
+ml-kem = { version = "0.2", features = ["zeroize"] }
+ml-dsa = { version = "=0.1.0-rc.8", features = ["zeroize"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
+[workspace]
+members = ["."]

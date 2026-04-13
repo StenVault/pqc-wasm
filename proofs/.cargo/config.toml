@@ -1,0 +1,3 @@
+[build]
+# Override parent's +bulk-memory (WASM-only) — proofs compile for native target.
+rustflags = []

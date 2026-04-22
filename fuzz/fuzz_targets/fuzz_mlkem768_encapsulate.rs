@@ -50,7 +50,6 @@ impl RngCore for SliceRng<'_> {
 
 impl CryptoRng for SliceRng<'_> {}
 
-// Feed 1184 arbitrary bytes as an encapsulation key, remaining bytes as RNG seed.
 fuzz_target!(|data: &[u8]| {
     if data.len() < 1184 {
         return;

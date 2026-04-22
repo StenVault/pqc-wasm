@@ -48,8 +48,7 @@ impl RngCore for SliceRng<'_> {
 
 impl CryptoRng for SliceRng<'_> {}
 
-// ML-KEM-768 keygen needs 64 bytes of randomness (d=32 + z=32).
-// Feed arbitrary fuzzer bytes as the RNG source.
+// ML-KEM-768 keygen needs 64 bytes of randomness (d=32 + z=32 per FIPS 203).
 fuzz_target!(|data: &[u8]| {
     if data.len() < 64 {
         return;

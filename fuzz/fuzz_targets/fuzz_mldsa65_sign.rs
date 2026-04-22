@@ -3,7 +3,6 @@ use libfuzzer_sys::fuzz_target;
 use ml_dsa::signature::Signer;
 use ml_dsa::{B32, ExpandedSigningKey, MlDsa65};
 
-// First 32 bytes = signing key seed, remaining bytes = message.
 fuzz_target!(|data: &[u8]| {
     if data.len() < 32 {
         return;

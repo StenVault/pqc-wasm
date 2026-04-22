@@ -3,7 +3,6 @@ use libfuzzer_sys::fuzz_target;
 use ml_dsa::signature::Verifier;
 use ml_dsa::{EncodedVerifyingKey, MlDsa65, Signature, VerifyingKey};
 
-// First 1952 bytes = verifying key, next 3309 bytes = signature, rest = message.
 fuzz_target!(|data: &[u8]| {
     if data.len() < 1952 + 3309 {
         return;

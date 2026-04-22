@@ -6,7 +6,6 @@ use ml_kem::{EncodedSizeUser, KemCore, MlKem768};
 type DK = <MlKem768 as KemCore>::DecapsulationKey;
 type CT = ml_kem::Ciphertext<MlKem768>;
 
-// First 2400 bytes = decapsulation key, next 1088 bytes = ciphertext.
 fuzz_target!(|data: &[u8]| {
     if data.len() < 2400 + 1088 {
         return;

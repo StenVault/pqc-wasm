@@ -1,3 +1,6 @@
+//! Post-quantum WebAssembly bindings for ML-KEM-768 (FIPS 203) and
+//! ML-DSA-65 (FIPS 204), wrapping the RustCrypto `ml-kem` and `ml-dsa` crates.
+
 #![forbid(unsafe_code)]
 
 use wasm_bindgen::prelude::*;
@@ -5,6 +8,7 @@ use zeroize::{Zeroize, ZeroizeOnDrop};
 
 // ── ML-KEM-768 (FIPS 203) ──────────────────────────────────────────────────
 
+/// ML-KEM-768 key pair (encapsulation + decapsulation key).
 #[wasm_bindgen]
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct MlKem768KeyPair {
@@ -15,17 +19,20 @@ pub struct MlKem768KeyPair {
 
 #[wasm_bindgen]
 impl MlKem768KeyPair {
+    /// Encapsulation (public) key, 1184 bytes.
     #[wasm_bindgen(getter)]
     pub fn encapsulation_key(&self) -> Vec<u8> {
         self.encapsulation_key.clone()
     }
 
+    /// Decapsulation (private) key, 2400 bytes.
     #[wasm_bindgen(getter)]
     pub fn decapsulation_key(&self) -> Vec<u8> {
         self.decapsulation_key.clone()
     }
 }
 
+/// Output of ML-KEM-768 encapsulation: ciphertext + shared secret.
 #[wasm_bindgen]
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct MlKem768EncapResult {
@@ -36,17 +43,20 @@ pub struct MlKem768EncapResult {
 
 #[wasm_bindgen]
 impl MlKem768EncapResult {
+    /// Ciphertext to send to the decapsulator, 1088 bytes.
     #[wasm_bindgen(getter)]
     pub fn ciphertext(&self) -> Vec<u8> {
         self.ciphertext.clone()
     }
 
+    /// Shared secret derived from encapsulation, 32 bytes.
     #[wasm_bindgen(getter)]
     pub fn shared_secret(&self) -> Vec<u8> {
         self.shared_secret.clone()
     }
 }
 
+/// Generate a fresh ML-KEM-768 key pair using OS randomness.
 #[wasm_bindgen]
 pub fn ml_kem_768_generate() -> MlKem768KeyPair {
     use ml_kem::{EncodedSizeUser, KemCore, MlKem768};
@@ -60,6 +70,7 @@ pub fn ml_kem_768_generate() -> MlKem768KeyPair {
     }
 }
 
+/// Encapsulate a fresh shared secret to a 1184-byte encapsulation key.
 #[wasm_bindgen]
 pub fn ml_kem_768_encapsulate(ek_bytes: &[u8]) -> Result<MlKem768EncapResult, JsError> {
     use ml_kem::kem::Encapsulate;
@@ -85,6 +96,7 @@ pub fn ml_kem_768_encapsulate(ek_bytes: &[u8]) -> Result<MlKem768EncapResult, Js
     })
 }
 
+/// Output of ML-KEM-768 decapsulation: the recovered shared secret.
 #[wasm_bindgen]
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct MlKem768DecapResult {
@@ -94,12 +106,14 @@ pub struct MlKem768DecapResult {
 
 #[wasm_bindgen]
 impl MlKem768DecapResult {
+    /// Shared secret recovered from the ciphertext, 32 bytes.
     #[wasm_bindgen(getter)]
     pub fn shared_secret(&self) -> Vec<u8> {
         self.shared_secret.clone()
     }
 }
 
+/// Decapsulate a 1088-byte ciphertext with a 2400-byte decapsulation key.
 #[wasm_bindgen]
 pub fn ml_kem_768_decapsulate(dk_bytes: &[u8], ct_bytes: &[u8]) -> Result<MlKem768DecapResult, JsError> {
     use ml_kem::kem::Decapsulate;
@@ -131,6 +145,7 @@ pub fn ml_kem_768_decapsulate(dk_bytes: &[u8], ct_bytes: &[u8]) -> Result<MlKem7
 
 // ── ML-DSA-65 (FIPS 204) ───────────────────────────────────────────────────
 
+/// ML-DSA-65 key pair (verifying key + 32-byte signing seed).
 #[wasm_bindgen]
 #[derive(Zeroize, ZeroizeOnDrop)]
 pub struct MlDsa65KeyPair {
@@ -141,17 +156,20 @@ pub struct MlDsa65KeyPair {
 
 #[wasm_bindgen]
 impl MlDsa65KeyPair {
+    /// Verifying (public) key, 1952 bytes.
     #[wasm_bindgen(getter)]
     pub fn verifying_key(&self) -> Vec<u8> {
         self.verifying_key.clone()
     }
 
+    /// Signing key as a 32-byte seed; expanded on demand during signing.
     #[wasm_bindgen(getter)]
     pub fn signing_key(&self) -> Vec<u8> {
         self.signing_key.clone()
     }
 }
 
+/// Generate a fresh ML-DSA-65 key pair from 32 random seed bytes.
 #[wasm_bindgen]
 pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
     use ml_dsa::{B32, KeyGen, MlDsa65};
@@ -174,6 +192,7 @@ pub fn ml_dsa_65_generate() -> MlDsa65KeyPair {
     }
 }
 
+/// Sign `message` with a 32-byte ML-DSA-65 seed, returning a 3309-byte signature.
 #[wasm_bindgen]
 pub fn ml_dsa_65_sign(sk_bytes: &[u8], message: &[u8]) -> Result<Vec<u8>, JsError> {
     use ml_dsa::{B32, ExpandedSigningKey, MlDsa65};
@@ -195,6 +214,7 @@ pub fn ml_dsa_65_sign(sk_bytes: &[u8], message: &[u8]) -> Result<Vec<u8>, JsErro
     Ok(sig.encode()[..].to_vec())
 }
 
+/// Verify a 3309-byte ML-DSA-65 signature over `message` against a 1952-byte verifying key.
 #[wasm_bindgen]
 pub fn ml_dsa_65_verify(vk_bytes: &[u8], message: &[u8], signature: &[u8]) -> Result<bool, JsError> {
     use ml_dsa::{MlDsa65, Signature, VerifyingKey, EncodedVerifyingKey};

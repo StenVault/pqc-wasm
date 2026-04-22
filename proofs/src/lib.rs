@@ -1,27 +1,10 @@
-//! Kani formal verification proofs for stenvault-pqc.
+//! Kani proofs for stenvault-pqc: size invariants, boundary rejection,
+//! and exhaustive conversion safety for the wrappers in `src/lib.rs`.
 //!
-//! These proofs verify safety properties of the wrapper functions in
-//! src/lib.rs using bounded model checking (CBMC). They cover:
+//! Full decoding paths are intractable (polynomial parsing blows up SAT);
+//! those are covered by the cargo-fuzz harnesses instead.
 //!
-//! 1. **Size invariants** — hardcoded constants match actual type-level
-//!    sizes. Catches stale constants after library upgrades, which would
-//!    cause out-of-bounds indexing in production.
-//!
-//! 2. **Boundary rejection** — `try_from` on wrong-size inputs returns
-//!    Err (confirms our hardcoded constants align with library checks).
-//!
-//! 3. **Conversion safety** — `try_into` and `B32::from` never panic
-//!    for any input of the correct size (exhaustive symbolic proof).
-//!
-//! Proofs on large inputs (>256 bytes) through crypto decoding are
-//! intractable — the polynomial coefficient parsing loops create SAT
-//! formulas that won't terminate. Those code paths are covered by the
-//! cargo-fuzz harnesses instead.
-//!
-//! Kani runs on Linux only. Locally, proofs are inert (`#[cfg(kani)]`).
-//! In CI they run on ubuntu-latest via GitHub Actions.
-//!
-//! Run: `cargo kani` (from this directory, on Linux)
+//! Linux only; inert elsewhere via `#[cfg(kani)]`. Run: `cargo kani`.
 
 // ── ML-KEM-768 (FIPS 203) ─────────────────────────────────────────────────
 
@@ -33,15 +16,9 @@ mod mlkem {
     type DK = <MlKem768 as KemCore>::DecapsulationKey;
 
     // ── Size invariants ────────────────────────────────────────────────
-    //
-    // src/lib.rs guards every `from_fn(|i| bytes[i])` call with a
-    // hardcoded length check (e.g. `if ek_bytes.len() != 1184`).
-    // If ml-kem ever changes a key or ciphertext size, these proofs
-    // fail BEFORE the mismatch can reach production.
-    //
-    // These are the highest-value proofs: they catch the most realistic
-    // maintenance bug (library upgrade changes sizes, wrapper constants
-    // go stale, from_fn indexes out of bounds).
+    // If ml-kem changes a key or ciphertext size, the hardcoded length
+    // checks in src/lib.rs go stale and from_fn indexes out of bounds.
+    // These proofs fail first.
 
     #[kani::proof]
     fn ek_encoded_size_is_1184() {
@@ -75,16 +52,8 @@ mod mldsa {
     use ml_dsa::{B32, EncodedVerifyingKey, MlDsa65, Signature};
 
     // ── Size boundary proofs ───────────────────────────────────────────
-    //
-    // Our wrapper checks `vk_bytes.len() != 1952` and
-    // `signature.len() != 3309`. These proofs verify the boundary:
-    // one-byte-short inputs are rejected, and correct-size inputs
-    // never cause a panic in try_from.
-    //
-    // The correct-size proofs use concrete (zero) inputs rather than
-    // symbolic `kani::any()` because try_from parses bytes into
-    // polynomial coefficients through nested loops — symbolic inputs
-    // create intractable SAT formulas.
+    // Confirms one-byte-short inputs are rejected by try_from, aligning
+    // the library's internal checks with our wrapper's length guards.
 
     #[kani::proof]
     fn vk_rejects_1951_bytes() {
@@ -105,10 +74,8 @@ mod mldsa {
     }
 
     // ── Seed conversion safety (symbolic — exhaustive) ─────────────────
-    //
-    // ml_dsa_65_sign converts the 32-byte key into B32 via
-    // `B32::from(seed_arr)`. 32 bytes = 256 symbolic bits — tractable
-    // for Kani. Proves infallible for ALL possible seeds.
+    // 256 symbolic bits is tractable; proves B32::from never panics
+    // for any 32-byte seed used in ml_dsa_65_sign.
 
     #[kani::proof]
     fn b32_from_no_panic() {
@@ -117,10 +84,8 @@ mod mldsa {
     }
 
     // ── try_into::<[u8; 32]> safety (symbolic — exhaustive) ────────────
-    //
-    // After the `sk_bytes.len() != 32` guard, src/lib.rs calls
-    // `sk_bytes.try_into()`. Proves this conversion is infallible
-    // for ALL possible 32-byte contents.
+    // Proves the try_into after the `len != 32` guard in src/lib.rs is
+    // infallible for any 32-byte content.
 
     #[kani::proof]
     fn try_into_32_infallible() {

@@ -44,6 +44,6 @@
   "devDependencies": {
     "@openforge-sh/liboqs": "^0.14.3",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.0"
+    "typescript": "^6.0.3"
   }
 }
